@@ -1,0 +1,13 @@
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+  $latitude = $_POST['latitude'];
+  $longitude = $_POST['longitude'];
+  $altitude = $_POST['altitude'];
+
+  // Lakukan sesuatu dengan data GPS yang diterima, seperti menyimpan ke database
+
+  echo "Data received: Latitude=$latitude, Longitude=$longitude, Altitude=$altitude";
+} else {
+  echo "Invalid request.";
+}
+?>

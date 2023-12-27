@@ -1,0 +1,24 @@
+<?php
+
+    //koneksi database
+    $konek = mysqli_connect("localhost", "root", "", "db_damkar");
+
+    //baca data yg dikirim data esp32
+    
+    $titik_lokasi = $_GET['titik_lokasi'];
+ 
+  // Lakukan sesuatu dengan data GPS yang diterima, seperti menyimpan ke database
+
+    //simpan ke tabel all_sensor
+    //auto increment = 1 / mengembalikan ID menjadi 1 apabila dikosongkan
+    mysqli_query($konek, "ALTER TABLE tb_damkar AUTO_INCREMENT=1");
+    //Simpan data sensor ke tabel 
+    $simpan = mysqli_query ( $konek,"insert into tb_damkar(titik_lokasi) values ('$titik_lokasi')");
+    $sql = "SELECT * FROM `tb_damkar`;";
+
+    //uji simpan untuk memberi respon
+    if($simpan)
+        echo "Berhasil Dikirim";
+    else
+        echo "Gagal Terkirim";
+?>          
