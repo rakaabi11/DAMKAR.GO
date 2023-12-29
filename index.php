@@ -18,56 +18,12 @@ include_once "library/distance/Distical.inc.php";
 use Ballen\Distical\Calculator as DistanceCalculator;
 use Ballen\Distical\Entities\LatLong;
 
-// Set our Lat/Long coordinates
-$ipswich = new LatLong(-6.1965316,106.8785516);
-$kebakaran = new LatLong(-6.190374,106.879389);
-
-// Get the distance between these two Lat/Long coordinates...
-$distanceCalculator = new DistanceCalculator($ipswich, $kebakaran);
-
-// You can then compute the distance...
-$distance = $distanceCalculator->get();
-// you can also chain these methods together eg. $distanceCalculator->get()->asMiles();
-
-// We can now output the miles using the asMiles() method, you can also calculate and use asKilometres() or asNauticalMiles() as required!
-echo 'Distance in miles between Central Ipswich and Jarak kebakaran is: ' . $distance->asKilometres();
 
 // Buat Instance baru
 $app = new Visualstudio();
 
 // Baca query dari alamat
 $app->query_string = $_SERVER['QUERY_STRING'];
-
-// If search form is submitted 
-if(isset($_POST['searchSubmit'])){ 
-    if(!empty($_POST['location'])){ 
-        $Alamat = $_POST['location']; 
-    } 
-    if(!empty($_POST['loc_latitude'])){ 
-        $Latitude = $_POST['loc_Latitude']; 
-    } 
-    
-    if(!empty($_POST['loc_longitude'])){ 
-        $Longitude = $_POST['loc_Longitude']; 
-    } 
-     
-    if(!empty($_POST['distance_km'])){ 
-        $distance_km = $_POST['distance_km']; 
-    } 
-} 
-// Calculate distance and filter records by radius 
-$sql_distance = $having = ''; 
-if(!empty($distance_km) && !empty($latitude) && !empty($longitude)){ 
-    $radius_km = $distance_km; 
-    $sql_distance = " ,(((acos(sin((".$latitude."*pi()/180)) * sin((`p`.`latitude`*pi()/180))+cos((".$latitude."*pi()/180)) * cos((`p`.`latitude`*pi()/180)) * cos(((".$longitude."-`p`.`longitude`)*pi()/180))))*180/pi())*60*1.1515*1.609344) as distance "; 
-    
-    $having = " HAVING (distance <= $radius_km) "; 
-    
-    $order_by = ' distance ASC '; 
-}else{ 
-    $order_by = ' p.id DESC '; 
-} 
-
 
 // Cek apakah ada query bernama mode?
 if ($app->is_url_query('mode')) {
@@ -93,32 +49,78 @@ if ($app->is_url_query('mode')) {
                 $long = (float)$titikArr[1];
                 
                 $lokasiKebakaran = new LatLong($lat,$long);
-                $kebakaran = new LatLong(-6.1944197,106.8788192);
-                
+                $targetradius_pemuda = new LatLong(-6.190374,106.879389);
+                $targetradius_UNJ = new LatLong(-6.1944197,106.8788192);
+                $targetradius_petukangan = new LatLong(-6.249227,106.753435);
+                $targetradius_condet = new LatLong(-6.299491,106.865473);
+
                 $dataLoc = $app->read_data_wilayah();
 
-                $arrLoc = [];
-
-                foreach ($dataLoc as $x) {
-                    $arr = [];
-                    foreach($x as $y => $z){
-                        if($y == "Latitude") {
-                            array_push($arr,$z);
-                        }
-                        if($y == "Longitude") {
-                            array_push($arr,$z);
-                        }
-                    }
-                    array_push($arrLoc, $arr);
-                }
-                var_dump($arrLoc);
-                  
-
                 // Get the distance between these two Lat/Long coordinates...
-                $distance1 = new DistanceCalculator($lokasiKebakaran, $kebakaran);
-                $distance2 = $distance1->get();
+                $distance_UNJ = new DistanceCalculator($lokasiKebakaran, $targetradius_UNJ);
+                $distance_petukangan = new DistanceCalculator($lokasiKebakaran, $targetradius_petukangan);
+                $distance_condet = new DistanceCalculator($lokasiKebakaran, $targetradius_condet);
+                $distance_pemuda = new DistanceCalculator($lokasiKebakaran, $targetradius_pemuda);
 
-                echo 'Jarak kebakaran is: ' . $distance2->asKilometres() . $dataLoc;
+                $distance_UNJ = $distance_UNJ ->get();
+                $distance_petukangan = $distance_petukangan->get();
+                $distance_condet = $distance_condet->get();
+                $distance_pemuda = $distance_pemuda->get();
+
+                echo 'Jarak kebakaran is: ' . $distance_UNJ->asKilometres();
+                echo 'Jarak kebakaran is: ' . $distance_petukangan->asKilometres();
+                echo 'Jarak kebakaran is: ' . $distance_condet->asKilometres();
+                echo 'Jarak kebakaran is: ' . $distance_pemuda->asKilometres();
+               
+
+              $username = "root";
+              $password = "";
+              $database = "db_damkar";
+              $mysqli = mysqli_connect('localhost', $username, $password, $database);
+
+              $AreaLuas= "Luas" ;
+              $AreaSempit ="Sempit";
+
+              $Total_kebakaran_Rawamangun ="172";
+              $Total_kebakaran_Pesanggrahan="108";
+              $Total_kebakaran_Pasarrebo="89";
+
+              $Total_Hydrant_UNJ ="12";
+              $Total_Hydrant_petukangan="1";
+              $Total_Hydrant_condet="20";
+              $Total_Hydrant_pemuda="0";
+              
+              $sql= "INSERT INTO wilayah_radius (Area, Total_kebakaran, Hydrant) VALUES 
+              ($AreaLuas, $Total_kebakaran_Rawamangun, $Total_Hydrant_UNJ),
+              ($AreaLuas, $Total_kebakaran_Pesanggrahan, $Total_Hydrant_petukangan),
+              ($AreaSempit, $Total_kebakaran_Pasarrebo, $Total_Hydrant_condet),
+              ($AreaSempit, $Total_kebakaran_Rawamangun, $Total_Hydrant_pemuda)";
+              if($distance_UNJ->asKilometres()< 0.5){
+                    
+                    echo "id: 1 "."<br>"; 
+                    echo " Total kebakaran : $Total_kebakaran_Rawamangun"."<br>";
+                    echo " Area: $AreaLuas"."<br>"; 
+                    echo " Total Hydrant: $Total_Hydrant_UNJ" ."<br>";
+                    
+                }
+                if($distance_petukangan->asKilometres()< 2.0){
+                    echo "id: 2 "."<br>";
+                    echo " Total kebakaran :$Total_kebakaran_Pesanggrahan"."<br>";
+                    echo " Area: $AreaLuas"."<br>"; 
+                    echo " Total Hydrant: $Total_Hydrant_petukangan" ."<br>";
+                }
+                if($distance_condet->asKilometres()< 2.0){
+                    echo "id: 3 "."<br>";
+                    echo " Total kebakaran :$Total_kebakaran_Pasarrebo"."<br>";
+                    echo " Area: $AreaSempit"."<br>"; 
+                    echo " Total Hydrant: $Total_Hydrant_condet" ."<br>";
+                }
+                if($distance_pemuda->asKilometres()< 0.5){
+                    echo "id: 4 "."<br>";
+                    echo " Total kebakaran :$Total_kebakaran_Rawamangun"."<br>";
+                    echo " Area: $AreaSempit"."<br>"; 
+                    echo " Total Hydrant: $Total_Hydrant_pemuda" ."<br>";
+                }
             
                 
                 $mail = new PHPMailer();
